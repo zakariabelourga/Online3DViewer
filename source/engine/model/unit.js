@@ -5,5 +5,7 @@ export const Unit =
     Centimeter : 2,
     Meter : 3,
     Inch : 4,
-    Foot : 5
+    Foot : 5,
+    CubicMeter: 6,
+    SquareMeter: 7
 };

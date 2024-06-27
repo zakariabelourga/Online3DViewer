@@ -20,11 +20,15 @@ function UnitToString (unit)
         case Unit.Centimeter:
             return Loc ('Centimeter');
         case Unit.Meter:
-            return Loc ('Meter');
+            return Loc ('m');
         case Unit.Inch:
             return Loc ('Inch');
         case Unit.Foot:
             return Loc ('Foot');
+        case Unit.CubicMeter:
+            return Loc('m³');
+        case Unit.SquareMeter:
+            return Loc('m²');
     }
     return Loc ('Unknown');
 }
@@ -34,6 +38,7 @@ export class SidebarDetailsPanel extends SidebarPanel
     constructor (parentDiv)
     {
         super (parentDiv);
+        this.showVerticesLinesTriangles = false;
     }
 
     GetName ()
@@ -53,30 +58,38 @@ export class SidebarDetailsPanel extends SidebarPanel
         let boundingBox = GetBoundingBox (object3D);
         let size = SubCoord3D (boundingBox.max, boundingBox.min);
         let unit = model.GetUnit ();
-        this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Vertices'), object3D.VertexCount ()));
-        let lineSegmentCount = object3D.LineSegmentCount ();
-        if (lineSegmentCount > 0) {
-            this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Lines'), lineSegmentCount));
-        }
-        let triangleCount = object3D.TriangleCount ();
-        if (triangleCount > 0) {
-            this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Triangles'), triangleCount));
+
+        if (this.showVerticesLinesTriangles) {
+            this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Vertices'), object3D.VertexCount ()));
+            let lineSegmentCount = object3D.LineSegmentCount ();
+            if (lineSegmentCount > 0) {
+                this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Lines'), lineSegmentCount));
+            }
+            let triangleCount = object3D.TriangleCount ();
+            if (triangleCount > 0) {
+                this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Triangles'), triangleCount));
+            }
         }
         if (unit !== Unit.Unknown) {
             this.AddProperty (table, new Property (PropertyType.Text, Loc ('Unit'), UnitToString (unit)));
         }
-        this.AddProperty (table, new Property (PropertyType.Number, Loc ('Size X'), size.x));
-        this.AddProperty (table, new Property (PropertyType.Number, Loc ('Size Y'), size.y));
-        this.AddProperty (table, new Property (PropertyType.Number, Loc ('Size Z'), size.z));
+        unit = Unit.Meter;
+        this.AddProperty(table, new Property(PropertyType.Number, Loc('Width'), size.x.toFixed(2) + ' ' + UnitToString(unit)));
+        this.AddProperty(table, new Property(PropertyType.Number, Loc('height'), size.y.toFixed(2) + ' ' + UnitToString(unit)));
+        this.AddProperty(table, new Property(PropertyType.Number, Loc('Thickness'), size.z.toFixed(2) + ' ' + UnitToString(unit)));
         this.AddCalculatedProperty (table, Loc ('Volume'), () => {
             if (!IsTwoManifold (object3D)) {
                 return null;
             }
-            const volume = CalculateVolume (object3D);
+            unit = Unit.CubicMeter;
+            const volume = CalculateVolume(object3D).toFixed(2) + ' ' + UnitToString(unit);
             return new Property (PropertyType.Number, null, volume);
+
+
         });
         this.AddCalculatedProperty (table, Loc ('Surface'), () => {
-            const surfaceArea = CalculateSurfaceArea (object3D);
+            unit = Unit.SquareMeter;
+            const surfaceArea = CalculateSurfaceArea(object3D).toFixed(2) + ' ' + UnitToString(unit);
             return new Property (PropertyType.Number, null, surfaceArea);
         });
         if (object3D.PropertyGroupCount () > 0) {
